@@ -1,4 +1,6 @@
+cmake_minimum_required(VERSION 3.15)
 project(s3upload)
+set(CMAKE_CXX_STANDARD 20)
 
 ExternalProject_Add(aws-sdk-cpp
   PREFIX aws-sdk-cpp
@@ -17,3 +19,10 @@ ExternalProject_Add(aws-sdk-cpp
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}
     ${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp/install/lib
 find_package(AWSSDK REQUIRED COMPONENTS s3)
+
+# Source files go here.
+set(PROJECT_SRC
+    main.cpp
+)
+add_executable(${PROJECT_NAME} ${PROJECT_SRC})
+target_link_libraries(${PROJECT_NAME} ${AWSSDK_LINK_LIBRARIES})
