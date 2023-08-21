@@ -27,6 +27,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp/install/include)
 # Source files go here.
 set(PROJECT_SRC
     main.cpp
+    CloudBackup.cpp
+    CloudBackup.h
+    constants.h
 )
 add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 target_link_libraries(${PROJECT_NAME} ${AWS_CORE_LIBRARY} ${AWS_S3_LIBRARY} ${AWS_TRANSFER})
