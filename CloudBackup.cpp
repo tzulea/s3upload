@@ -2,6 +2,8 @@
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/core/Aws.h>
 #include "constants.h"
+#include <filesystem>
+
 namespace s3upload
 {
   CloudBackup::CloudBackup(const std::map<std::string, std::string>& aConfig)
@@ -21,9 +23,12 @@ namespace s3upload
     config.s3Client = mS3Client;
     config.errorCallback = std::bind(&CloudBackup::onUploadError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     config.uploadProgressCallback = std::bind(&CloudBackup::onUploadProgress, this, std::placeholders::_1, std::placeholders::_2);
-
+    config.transferInitiatedCallback = std::bind(&CloudBackup::onTransferInit, this, std::placeholders::_1, std::placeholders::_2);
+    config.transferStatusUpdatedCallback = std::bind(&CloudBackup::onTransferStatusUpdate, this, std::placeholders::_1, std::placeholders::_2);
     mTransfer = Aws::Transfer::TransferManager::Create(config);
+    mConfig = aConfig;
   }
+
   CloudBackup::~CloudBackup()
   {
     Aws::SDKOptions options;
@@ -36,5 +41,39 @@ namespace s3upload
   void CloudBackup::onUploadError(const Aws::Transfer::TransferManager* aManager, const std::shared_ptr<const Aws::Transfer::TransferHandle>& aHandle, const Aws::Client::AWSError<Aws::S3::S3Errors>& aError)
   {
   }
+
+  void CloudBackup::onTransferInit(const Aws::Transfer::TransferManager* amanager, const std::shared_ptr<const Aws::Transfer::TransferHandle>& aHandle)
+  {
+  }
+
+  void CloudBackup::onTransferStatusUpdate(const Aws::Transfer::TransferManager* amanager, const std::shared_ptr<const Aws::Transfer::TransferHandle>& aHandle)
+  {
+
+  }
+
+  void CloudBackup::upload(const std::string& aPath)
+  {
+    bool isDir = std::filesystem::is_directory(aPath);
+    auto bucket = mConfig[bucketName];
+    if (!isDir)
+    {
+      std::string filename;
+      if (!mConfig[bucketFolder].empty())
+      {
+        filename = mConfig[bucketFolder];
+        filename.append("/");
+      }
+      auto name = std::filesystem::path(aPath).filename().string();
+      filename.append(name);
+      mTransfer->UploadFile(aPath, bucket, filename, "application/octet-stream", Aws::Map<Aws::String, Aws::String>());
+    }
+    else
+    {
+      auto folderPrefix = mConfig[bucketFolder];
+      mTransfer->UploadDirectory(aPath, bucket, folderPrefix, Aws::Map<Aws::String, Aws::String>());
+    }
+    mTransfer->WaitUntilAllFinished();
+  }
+
 
 }
