@@ -40,6 +40,7 @@ namespace s3upload
 
   void CloudBackup::onUploadError(const Aws::Transfer::TransferManager* aManager, const std::shared_ptr<const Aws::Transfer::TransferHandle>& aHandle, const Aws::Client::AWSError<Aws::S3::S3Errors>& aError)
   {
+    auto x = aError.GetMessage();
   }
 
   void CloudBackup::onTransferInit(const Aws::Transfer::TransferManager* amanager, const std::shared_ptr<const Aws::Transfer::TransferHandle>& aHandle)
@@ -55,22 +56,21 @@ namespace s3upload
   {
     bool isDir = std::filesystem::is_directory(aPath);
     auto bucket = mConfig[bucketName];
+    std::string filename;
+    if (!mConfig[bucketFolder].empty())
+    {
+      filename = mConfig[bucketFolder];
+      filename.append("/");
+    }
+    auto name = std::filesystem::path(aPath).filename().string();
+    filename.append(name);
     if (!isDir)
     {
-      std::string filename;
-      if (!mConfig[bucketFolder].empty())
-      {
-        filename = mConfig[bucketFolder];
-        filename.append("/");
-      }
-      auto name = std::filesystem::path(aPath).filename().string();
-      filename.append(name);
       mTransfer->UploadFile(aPath, bucket, filename, "application/octet-stream", Aws::Map<Aws::String, Aws::String>());
     }
     else
     {
-      auto folderPrefix = mConfig[bucketFolder];
-      mTransfer->UploadDirectory(aPath, bucket, folderPrefix, Aws::Map<Aws::String, Aws::String>());
+      mTransfer->UploadDirectory(aPath, bucket, filename, Aws::Map<Aws::String, Aws::String>());
     }
     mTransfer->WaitUntilAllFinished();
   }
