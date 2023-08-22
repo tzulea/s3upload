@@ -44,8 +44,17 @@ set(PROJECT_SRC
     CloudBackup.cpp
     CloudBackup.h
     constants.h
+    IWatcher.h
 )
-add_executable(${PROJECT_NAME} ${PROJECT_SRC})
+
+if(WIN32)
+  set(PLATFORM_SRC
+    WatcherWin.h
+    WatcherWin.cpp
+  )
+endif()
+
+add_executable(${PROJECT_NAME} ${PROJECT_SRC} ${PLATFORM_SRC})
 
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp/install/lib/aws-crt-cpp)
 

@@ -1,3 +1,4 @@
+#pragma once
 namespace s3upload
 {
   constexpr char awsCred[] = "AWS_CRED";
