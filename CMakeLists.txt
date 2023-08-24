@@ -43,6 +43,8 @@ set(PROJECT_SRC
     main.cpp
     CloudBackup.cpp
     CloudBackup.h
+    CloudWatchBackup.cpp
+    CloudWatchbackup.h
     constants.h
     IWatcher.h
 )

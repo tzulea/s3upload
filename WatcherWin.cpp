@@ -14,28 +14,30 @@ namespace s3upload
   {
     mStop = true;
     SetEvent(mOverLapped.hEvent);
+    mWatcherWin.join();
   }
 
   void WatcherWin::watch(const std::filesystem::path& aPath)
   {
     mWatchPath = aPath;
-    auto fileHandle = CreateFile(mWatchPath.string().c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-      FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-    if (fileHandle == INVALID_HANDLE_VALUE)
-    {
-      return;
-    }
 
-    std::thread watchThread([&] {
+    mWatcherWin = std::thread([&] {
       constexpr int filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE;
       constexpr int length = 1024 * 1024; // 1MB
       auto buffer = std::make_unique<std::uint8_t[]>(length);
-      mOverLapped.hEvent = CreateEventExW(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+      mOverLapped.hEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+      auto fileHandle = CreateFileW(mWatchPath.wstring().c_str(), GENERIC_READ | FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
+      if (fileHandle == INVALID_HANDLE_VALUE)
+      {
+        return;
+      }
       while (!mStop)
       {
         auto result = ReadDirectoryChangesW(fileHandle, buffer.get(), length, true, filter, nullptr, &mOverLapped, nullptr);
         if (!result)
         {
+          auto err = GetLastError();
           break;
         }
         auto waitResult = WaitForSingleObject(mOverLapped.hEvent, INFINITE);

@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <atomic>
 #include <memory>
+#include <thread>
 
 namespace s3upload
 {
@@ -18,6 +19,7 @@ namespace s3upload
     OVERLAPPED mOverLapped;
     std::atomic_bool mStop;
     std::filesystem::path mWatchPath;
+    std::thread mWatcherWin;
 
   };
 }
