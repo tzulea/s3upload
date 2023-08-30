@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 project(s3upload VERSION 1.0.0 LANGUAGES CXX)
+
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
 include(ExternalProject)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -54,10 +59,15 @@ if(WIN32)
     WatcherWin.h
     WatcherWin.cpp
   )
+elseif(LINUX)
+  set(PLATFORM_SRC
+    WatcherLinux.h
+    WatcherLinux.cpp
+  )
 endif()
 
 add_executable(${PROJECT_NAME} ${PROJECT_SRC} ${PLATFORM_SRC})
-
+add_dependencies(${PROJECT_NAME} aws-sdk-cpp)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp/install/lib/aws-crt-cpp)
 
 target_link_libraries(${PROJECT_NAME} ${AWS_CORE_LIBRARY} ${AWS_S3_LIBRARY} ${AWS_TRANSFER} ${AWS_CRT} ${AWS_SDK_UTILS} ${AWS_C_COMPRESSION} ${AWS_C_MQTT} ${AWS_C_S3} ${AWS_C_COMMON} ${AWS_C_STREAM} ${AWS_C_IO} ${AWS_C_HTTP} ${AWS_C_HTTP} ${AWS_C_AUTH} ${AWS_C_CAL} ${AWS_CHECKSUM})

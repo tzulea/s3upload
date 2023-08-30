@@ -1,6 +1,8 @@
 #include "CloudWatchBackup.h"
 #ifdef _WIN32
 #include "WatcherWin.h"
+#elif __linux__
+#include "WatcherLinux.h"
 #endif // _WIN32
 
 namespace s3upload
@@ -31,6 +33,8 @@ namespace s3upload
   {
 #ifdef _WIN32
     mFsWatcher = std::make_unique<WatcherWin>();
+#elif __linux__
+    mFsWatcher = std::make_unique<WatcherLinux>();
 #endif // _WIN32
     mFsWatcher->onNewFile = std::bind(&CloudWatchBackup::onNewFileAdded, this, std::placeholders::_1);
     //start our thread
